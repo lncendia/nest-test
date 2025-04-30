@@ -1,8 +1,10 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './services/auth.service';
 import { RegisterRequest } from './requests/register-request';
 import { RefreshTokenRequest } from './requests/refresh-token.request';
 import { LoginRequest } from './requests/login-request';
+import { TwoFactorStrategy } from './strategies/2fa.strategy';
+import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -15,9 +17,12 @@ export class AuthController {
   }
 
   // Метод для аутентификации (логин)
+  @UseGuards(TwoFactorStrategy)
   @Post('authenticate')
-  async authenticate(@Body() dto: LoginRequest) {
-    return this.authService.authenticate(dto);
+  async authenticate(@Req() req, @Body() dto: LoginRequest) {
+    const user = this.authService.authenticate(dto);
+    await req.logout();
+    return user;
   }
 
   // Метод для обновления токенов

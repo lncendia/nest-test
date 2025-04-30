@@ -7,6 +7,7 @@ import { RegisterResponse } from '../responses/register.responce';
 import { AuthenticateResponse } from '../responses/authenticate.responce';
 import { LoginData } from '../interfaces/login-data.interface';
 import { RefreshData } from '../interfaces/refresh.interface';
+import { UserTwoFactorData } from '../interfaces/user-2fa-data.interface';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +35,16 @@ export class AuthService {
       refreshToken: refreshToken.token,
       refreshTokenValidity: refreshToken.expiresInDays,
     };
+  }
+
+  async validate(data: LoginData): Promise<UserTwoFactorData> {
+    const user = await this.userManager.findByEmail(data.email);
+
+    if (!user) throw new Error('User not found');
+
+    await this.userManager.passwordAuthenticate(user, data.password);
+
+    return user;
   }
 
   async authenticate(data: LoginData): Promise<AuthenticateResponse> {

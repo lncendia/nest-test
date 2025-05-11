@@ -4,6 +4,7 @@ import * as winston from 'winston';
 import { Logger as WinstonLogger } from 'winston';
 import * as chalk from 'chalk';
 import { TransformableInfo } from 'logform';
+import 'winston-daily-rotate-file';
 
 @Module({
   providers: [
@@ -21,9 +22,17 @@ import { TransformableInfo } from 'logform';
                 consoleLogFormat,
               ),
             }),
-            new winston.transports.File({
-              filename: 'app.log',
-              rotationFormat: () => {},
+            new winston.transports.DailyRotateFile({
+              dirname: 'logs', // папка для логов
+              filename: 'app-%DATE%.log', // шаблон имени файлов
+              datePattern: 'YYYY-MM-DD', // каждый день новый файл
+              zippedArchive: true, // можно включить сжатие старых логов в .gz (по желанию)
+              maxFiles: '14d', // храним файлы 14 дней
+              level: 'warn',
+              format: winston.format.combine(
+                winston.format.timestamp({ format: 'HH:mm:ss' }),
+                winston.format.json(),
+              ),
             }),
           ],
         });

@@ -8,7 +8,8 @@ export class JwtConfig {
     public readonly refreshTokenKey: string,
     public readonly refreshTokenIV: string,
     public readonly validIssuer: string,
-    // public readonly validAudience: string,
+    public readonly validAudience: string,
+    public readonly twoFactorAudience: string,
     public readonly issuedAudiences: string[],
     public readonly refreshTokenValidityInDays: number,
     public readonly accessTokenLifetime: string,
@@ -29,6 +30,13 @@ export const JwtConfigFactory = (configService: ConfigService) => {
   const validIssuer = configService.get<string>('Jwt.ValidIssuer');
   if (!validIssuer) throw new Error('JWT valid issuer not provided');
 
+  const validAudience = configService.get<string>('Jwt.ValidAudience');
+  if (!validAudience) throw new Error('JWT valid audience not provided');
+
+  const twoFactorAudience = configService.get<string>('Jwt.TwoFactorAudience');
+  if (!twoFactorAudience)
+    throw new Error('JWT two factor audience not provided');
+
   const audiences = configService.get<string[]>('Jwt.IssuedAudiences');
   if (!audiences) throw new Error('JWT audiences not provided');
 
@@ -47,6 +55,8 @@ export const JwtConfigFactory = (configService: ConfigService) => {
     refreshTokenKey,
     refreshTokenIV,
     validIssuer,
+    validAudience,
+    twoFactorAudience,
     audiences,
     refreshTokenValidityInDays,
     accessTokenLifetime,

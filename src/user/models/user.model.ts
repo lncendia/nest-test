@@ -16,11 +16,20 @@ export class User {
   @Prop({ default: false })
   emailConfirmed: boolean;
 
+  @Prop({ required: false, type: String })
+  authenticatorKey: string | null = null;
+
+  @Prop({ default: false })
+  twoFactorEnabled: boolean;
+
   @Prop({ required: true })
   securityStamp: string;
 
   @Prop({ default: () => new Date() })
   createdAt: Date;
+
+  @Prop()
+  recoveryCodes: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -21,22 +21,23 @@ export class JwtService {
    * Генерация JWT токена доступа
    * @param claims - набор утверждений (claims) для включения в токен
    * @param tokenId - уникальный идентификатор токена
-   * @param idp - необязательный идентификатор провайдера аутентификации
+   * @param twoFactor
    * @returns подписанный JWT токен в виде строки
    */
   generateAccessToken(
     claims: Record<string, string | string[]>,
     tokenId: string,
-    idp?: string,
+    twoFactor: boolean = false,
   ): string {
     // Формируем payload токена:
     const payload = {
       ...claims, // Копируем все переданные claims
       jti: tokenId, // Уникальный идентификатор токена (JWT ID)
       iat: Math.floor(Date.now() / 1000), // Время выпуска токена (в секундах с эпохи UNIX)
-      aud: this.config.issuedAudiences, // Аудитории, для которых предназначен токен
+      aud: twoFactor
+        ? this.config.twoFactorAudience
+        : this.config.issuedAudiences, // Аудитории, для которых предназначен токен
       iss: this.config.validIssuer, // Издатель токена
-      ...(idp && { idp }), // Добавляем провайдера аутентификации, если он передан
     };
 
     // Создаем и подписываем JWT токен:

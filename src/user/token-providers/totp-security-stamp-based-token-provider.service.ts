@@ -2,10 +2,13 @@ import * as crypto from 'crypto';
 import * as base32 from 'hi-base32';
 import { totp } from 'otplib';
 import { Injectable } from '@nestjs/common';
-import { TokenGeneratorService } from './token-generator.service';
+import { TokenProviderService } from './token-provider.service';
+import { User } from '../models/user.model';
 
 @Injectable()
-export class TotpGeneratorService implements TokenGeneratorService {
+export class TotpSecurityStampBasedTokenProviderService
+  implements TokenProviderService
+{
   private getModifier(purpose: string, userId: string): string {
     return `Totp:${purpose}:${userId}`;
   }
@@ -17,20 +20,15 @@ export class TotpGeneratorService implements TokenGeneratorService {
     return base32.encode(digest).replace(/=+$/, ''); // Base32 без padding
   }
 
-  generate(purpose: string, userId: string, securityStamp: string): string {
-    const modifier = this.getModifier(purpose, userId);
-    const secret = this.deriveSecret(securityStamp, modifier);
+  generate(purpose: string, user: User): string {
+    const modifier = this.getModifier(purpose, user.id);
+    const secret = this.deriveSecret(user.securityStamp, modifier);
     return totp.generate(secret);
   }
 
-  validate(
-    purpose: string,
-    userId: string,
-    securityStamp: string,
-    token: string,
-  ): boolean {
-    const modifier = this.getModifier(purpose, userId);
-    const secret = this.deriveSecret(securityStamp, modifier);
+  validate(purpose: string, user: User, token: string): boolean {
+    const modifier = this.getModifier(purpose, user.id);
+    const secret = this.deriveSecret(user.securityStamp, modifier);
     return totp.check(token, secret);
   }
 }

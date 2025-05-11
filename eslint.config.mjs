@@ -26,6 +26,17 @@ export default tseslint.config(
   },
   {
     rules: {
+      'lines-around-comment': [
+        'warn',
+        {
+          beforeBlockComment: true,
+          beforeLineComment: true,
+          allowBlockStart: true,
+          allowClassStart: true,
+          allowObjectStart: true,
+          allowArrayStart: true,
+        },
+      ],
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn'

@@ -5,29 +5,26 @@ import { JwtConfig } from './jwt.config';
 
 interface TokenPayload {
   sub: string;
-  email: string;
 }
 
-export interface UserPayload {
+export interface TwoFactorPayload {
   id: string;
-  email: string;
 }
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+export class JwtTwoFactorStrategy extends PassportStrategy(Strategy, '2fa') {
   constructor(config: JwtConfig) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: config.issuerSigningKey,
       issuer: config.validIssuer,
-      audience: config.validAudience,
+      audience: config.twoFactorAudience,
     });
   }
 
-  validate(payload: TokenPayload): UserPayload {
+  validate(payload: TokenPayload) {
     return {
-      id: payload.sub,
-      email: payload.email,
+      userId: payload.sub,
     };
   }
 }

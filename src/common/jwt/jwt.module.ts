@@ -3,6 +3,8 @@ import { JwtService } from './jwt.service';
 import { JwtConfig, JwtConfigFactory } from './jwt.config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule as NestJwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './jwt.strategy';
+import { JwtTwoFactorStrategy } from './jwt-two-factor.strategy';
 
 @Module({
   imports: [NestJwtModule, ConfigModule],
@@ -13,6 +15,8 @@ import { JwtModule as NestJwtModule } from '@nestjs/jwt';
       useFactory: JwtConfigFactory,
       inject: [ConfigService],
     },
+    JwtStrategy,
+    JwtTwoFactorStrategy,
   ],
   exports: [JwtService],
 })

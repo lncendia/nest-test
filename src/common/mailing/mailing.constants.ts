@@ -1,0 +1,1 @@
+export const MAILING_OPTIONS = 'MAILING_OPTIONS';

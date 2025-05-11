@@ -1,20 +1,17 @@
 {
-  "Telegram": {
-    "Token": "5022522868:AAF_IbSryTFMuQSZj1TPlSQjx-PbohmVbQg"
-  },
-  "Webhook": {
-    "Url": "https://5c2b-103-54-17-13.ngrok-free.app/webhook",
-    "Secret": "TV5vFMkP7RO00L2OHujjBYSPRm5xS9jA"
+  "ConnectionStrings": {
+    "Mongo": "mongodb://root:toor@localhost:27017/nest?authSource=admin"
   },
   "Jwt": {
     "IssuerSigningKey": "bXktc3VwZXItc2VjdXJ0LXNlY3JldC1rZXktMTIzNDU2Nzg5MA==",
     "RefreshTokenKey": "Kr1yt0TJeyHeDDfMx3PxWMrjWfCryxRZ3WjeEy/KW/o=",
     "RefreshTokenIV": "nAxNyG+9zyp7WREirUdg1Q==",
     "ValidIssuer": "https://nest-app.com",
+    "ValidAudience": "auth",
+    "TwoFactorAudience": "2fa",
     "IssuedAudiences": [
-      "web-app",
-      "mobile-app",
-      "admin-panel"
+      "auth",
+      "my-service"
     ],
     "RefreshTokenValidityInDays": 30,
     "AccessTokenLifetime": "15m"

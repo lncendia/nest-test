@@ -3,7 +3,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class UserValidator {
+export class UserValidatorService {
   constructor(private readonly userRepository: UserRepository) {}
 
   async validate(user: User): Promise<void> {

@@ -8,7 +8,7 @@ export interface PasswordValidationOptions {
 }
 
 @Injectable()
-export class PasswordValidator {
+export class PasswordValidatorService {
   constructor(private readonly options: PasswordValidationOptions) {}
 
   async validate(password: string): Promise<void> {

@@ -3,31 +3,38 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './models/user.model';
 import { UserRepository } from './repositories/user.repository';
 import { UserManager } from './services/user-manager.service';
-import { UserValidator } from './services/user.validator';
-import { PasswordValidator } from './services/password.validator';
-import { PasswordHasherModule } from '../common/password-hasher/password-hasher.module';
-import { TokenGeneratorModule } from '../common/token-generator/token-generator.module';
+import { UserValidatorService } from './validators/user-validator.service';
+import { PasswordValidatorService } from './validators/password-validator.service';
+import { PasswordHasher } from './services/password-hasher.service';
+import { TotpSecurityStampBasedTokenProviderService } from './token-providers/totp-security-stamp-based-token-provider.service';
+import { AuthenticatorTokenProvider } from './token-providers/authenticator-token-provider.service';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    PasswordHasherModule,
-    TokenGeneratorModule,
   ],
   providers: [
     UserRepository,
-    UserValidator,
-    PasswordValidator,
+    UserValidatorService,
     UserManager,
+    PasswordHasher,
     {
-      provide: PasswordValidator,
+      provide: PasswordValidatorService,
       useFactory: () =>
-        new PasswordValidator({
+        new PasswordValidatorService({
           allowedSpecialChars: '!@#$%^&*()-_',
           minLength: 5,
           requireSpecialChar: true,
           requireUppercase: true,
         }),
+    },
+    {
+      provide: 'EmailTokenProvider',
+      useClass: TotpSecurityStampBasedTokenProviderService,
+    },
+    {
+      provide: 'AuthenticatorTokenProvider',
+      useClass: AuthenticatorTokenProvider,
     },
   ],
   exports: [UserManager],

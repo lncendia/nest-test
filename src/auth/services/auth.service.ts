@@ -3,11 +3,12 @@ import { JwtService } from '../../common/jwt/jwt.service';
 import { UserManager } from '../../user/services/user-manager.service';
 import { RegisterData } from '../interfaces/register-data.interface';
 import { User } from '../../user/models/user.model';
-import { RegisterResponse } from '../responses/register.responce';
-import { AuthenticateResponse } from '../responses/authenticate.responce';
+import { RegisterResponse } from '../responses/register.response';
+import { AuthenticateResponse } from '../responses/authenticate.response';
 import { LoginData } from '../interfaces/login-data.interface';
 import { RefreshData } from '../interfaces/refresh.interface';
-import { UserTwoFactorData } from '../interfaces/user-2fa-data.interface';
+import { CodeType } from '../enums/code-type.enum ';
+import { AuthenticateTwoFactorData } from '../interfaces/authenticate-2fa.interface';
 
 @Injectable()
 export class AuthService {
@@ -34,25 +35,48 @@ export class AuthService {
       emailCode,
       refreshToken: refreshToken.token,
       refreshTokenValidity: refreshToken.expiresInDays,
+      twoFactorRequired: false,
     };
   }
 
-  async validate(data: LoginData): Promise<UserTwoFactorData> {
-    const user = await this.userManager.findByEmail(data.email);
+  async authenticateWithTwoFactor(
+    data: AuthenticateTwoFactorData,
+  ): Promise<AuthenticateResponse> {
+    const user = await this.userManager.findById(data.userId);
 
     if (!user) throw new Error('User not found');
 
-    await this.userManager.passwordAuthenticate(user, data.password);
+    let result: boolean;
 
-    return user;
-  }
+    switch (data.type) {
+      case CodeType.Authenticator:
+        result = this.userManager.verifyTwoFactorToken(
+          user,
+          'authenticator',
+          data.code,
+        );
+        break;
 
-  async authenticate(data: LoginData): Promise<AuthenticateResponse> {
-    const user = await this.userManager.findByEmail(data.email);
+      case CodeType.Email:
+        result = this.userManager.verifyTwoFactorToken(
+          user,
+          'email',
+          data.code,
+        );
+        break;
 
-    if (!user) throw new Error('User not found');
+      case CodeType.RecoveryCode:
+        result = await this.userManager.redeemTwoFactorRecoveryCode(
+          user,
+          data.code,
+        );
+        break;
 
-    await this.userManager.passwordAuthenticate(user, data.password);
+      default:
+        throw new Error(`Unsupported code type: ${data.type}`);
+    }
+
+    if (!result) throw new Error('Code invalid');
 
     const claims = this.claimsFactory(user);
 
@@ -66,6 +90,42 @@ export class AuthService {
       accessToken,
       refreshToken: refreshToken.token,
       refreshTokenValidity: refreshToken.expiresInDays,
+      twoFactorRequired: false,
+    };
+  }
+
+  async authenticate(data: LoginData): Promise<AuthenticateResponse> {
+    const user = await this.userManager.findByEmail(data.email);
+
+    if (!user) throw new Error('User not found');
+
+    await this.userManager.passwordAuthenticate(user, data.password);
+
+    if (user.twoFactorEnabled) {
+      const claims = this.twoFactorClaimsFactory(user);
+      const tokenId = crypto.randomUUID();
+      const accessToken = this.jwt.generateAccessToken(claims, tokenId, true);
+      return {
+        accessToken: accessToken,
+        refreshToken: null,
+        refreshTokenValidity: null,
+        twoFactorRequired: true,
+      };
+    }
+
+    const claims = this.claimsFactory(user);
+
+    const tokenId = crypto.randomUUID();
+
+    const accessToken = this.jwt.generateAccessToken(claims, tokenId);
+
+    const refreshToken = this.jwt.generateRefreshToken(tokenId);
+
+    return {
+      accessToken,
+      refreshToken: refreshToken.token,
+      refreshTokenValidity: refreshToken.expiresInDays,
+      twoFactorRequired: false,
     };
   }
 
@@ -100,6 +160,7 @@ export class AuthService {
       accessToken,
       refreshToken: refreshToken.token,
       refreshTokenValidity: refreshToken.expiresInDays,
+      twoFactorRequired: false,
     };
   }
 
@@ -108,7 +169,12 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       email_confirmed: user.emailConfirmed,
-      security_stamp: user.securityStamp,
+    };
+  }
+
+  private twoFactorClaimsFactory(user: User): Record<string, any> {
+    return {
+      sub: user.id,
     };
   }
 }
